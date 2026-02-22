@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAINR0T.EXE — HACK THE SHOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff41;
+    --dark-green: #003b00;
+    --cyan: #00f5ff;
+    --red: #ff003c;
+    --yellow: #ffe600;
+    --bg: #020c02;
+    --card-bg: #040f04;
+    --glow: 0 0 10px #00ff41, 0 0 30px #00ff4155;
+    --glow-cyan: 0 0 10px #00f5ff, 0 0 30px #00f5ff55;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--green);
+    overflow-x: hidden;
+    min-height: 100vh;
+    cursor: crosshair;
+  }
+
+  #matrix-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    opacity: 0.08; pointer-events: none; z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+  .header {
+    text-align: center; padding: 40px 20px 20px;
+    border-bottom: 1px solid var(--green); margin-bottom: 40px;
+  }
+  .header::before {
+    content: '> SYSTEM BREACH DETECTED <';
+    display: block; font-family: 'VT323', monospace; font-size: 1rem;
+    color: var(--red); letter-spacing: 4px;
+    animation: blink 1s step-end infinite; margin-bottom: 10px;
+  }
+  .header h1 {
+    font-family: 'Orbitron', monospace; font-size: clamp(2rem, 6vw, 4rem);
+    font-weight: 900; color: var(--green); text-shadow: var(--glow);
+    letter-spacing: 6px; line-height: 1.1; animation: glitch 6s infinite;
+  }
+  .header h1 span { color: var(--cyan); text-shadow: var(--glow-cyan); }
+  .header .subtitle {
+    font-family: 'VT323', monospace; font-size: 1.4rem;
+    color: #00ff4188; margin-top: 10px; letter-spacing: 3px;
+  }
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 20px; padding: 8px 16px;
+    border: 1px solid #00ff4133; background: #00ff410a;
+    font-size: 0.75rem; color: #00ff4188; flex-wrap: wrap; gap: 8px;
+  }
+  .status-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: var(--glow);
+    animation: pulse 1.5s ease-in-out infinite; margin-right: 6px;
+  }
+
+  .section-label {
+    font-family: 'Orbitron', monospace; font-size: 0.7rem;
+    letter-spacing: 5px; color: var(--cyan); text-shadow: var(--glow-cyan);
+    margin-bottom: 20px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--cyan), transparent);
+  }
+
+  .shop-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px; margin-bottom: 50px;
+  }
+
+  .card {
+    background: var(--card-bg); border: 1px solid #00ff4144;
+    position: relative; transition: transform 0.2s, border-color 0.2s; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--green); box-shadow: var(--glow);
+    transform: scaleX(0); transition: transform 0.3s;
+  }
+  .card:hover { border-color: var(--green); transform: translateY(-4px); box-shadow: var(--glow); }
+  .card:hover::before { transform: scaleX(1); }
+
+  .card-img {
+    width: 100%; height: 200px;
+    display: flex; align-items: center; justify-content: center;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00ff410a 2px, #00ff410a 4px);
+    position: relative; overflow: hidden;
+  }
+  .card-img img {
+    max-height: 185px; max-width: 90%; object-fit: contain;
+    filter: drop-shadow(0 0 14px #00ff4177);
+    transition: transform 0.3s, filter 0.3s;
+    position: relative; z-index: 1;
+  }
+  .card:hover .card-img img {
+    transform: scale(1.08); filter: drop-shadow(0 0 22px #00ff41bb);
+  }
+  /* Candy mutation — pink glow */
+  .candy-img img {
+    filter: drop-shadow(0 0 14px #ff69b477) brightness(1.05) !important;
+  }
+  .card:hover .candy-img img {
+    filter: drop-shadow(0 0 22px #ff69b4cc) brightness(1.1) !important;
+  }
+  /* Scan line sweep */
+  .card-img::after {
+    content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(transparent, #00ff4115, transparent);
+    animation: scan 3s linear infinite; z-index: 2; pointer-events: none;
+  }
+
+  /* Fallback emoji when image fails */
+  .card-img .fallback {
+    font-size: 4.5rem; display: none; position: relative; z-index: 1;
+  }
+
+  .card-body { padding: 16px; border-top: 1px solid #00ff4122; }
+  .card-id { font-size: 0.65rem; color: #00ff4155; letter-spacing: 2px; margin-bottom: 4px; }
+  .card-name {
+    font-family: 'Orbitron', monospace; font-size: 0.9rem; font-weight: 700;
+    color: var(--cyan); text-shadow: 0 0 8px #00f5ff88; margin-bottom: 4px; line-height: 1.3;
+  }
+  .card-rarity { font-size: 0.7rem; color: var(--yellow); letter-spacing: 2px; margin-bottom: 8px; }
+
+  .mutation-tag {
+    display: inline-block; font-size: 0.62rem; padding: 2px 8px;
+    border: 1px solid; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase;
+  }
+  .mutation-base { border-color: #888; color: #aaa; background: #1a1a1a; }
+  .mutation-candy {
+    border-color: #ff69b4; color: #ff69b4; background: #1a001a;
+    text-shadow: 0 0 6px #ff69b4; box-shadow: 0 0 8px #ff69b433;
+  }
+
+  .traits-label { font-size: 0.6rem; color: #00ff4155; letter-spacing: 2px; margin-bottom: 5px; }
+  .traits-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; min-height: 24px; }
+  .trait-tag {
+    font-size: 0.62rem; padding: 2px 8px; border-radius: 2px;
+    letter-spacing: 1px; border: 1px solid;
+  }
+  .trait-none   { color: #00ff4144; border-color: #00ff4122; font-style: italic; }
+  .trait-mexico { color: #f0b429; border-color: #f0b429; background: #1a1000; text-shadow: 0 0 5px #f0b42966; }
+  .trait-fire   { color: #ff5e1a; border-color: #ff5e1a; background: #1a0700; text-shadow: 0 0 5px #ff5e1a66; }
+  .trait-crab   { color: #ff7043; border-color: #ff7043; background: #1a0500; text-shadow: 0 0 5px #ff704366; }
+
+  .card-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px; margin-bottom: 14px; font-size: 0.68rem;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-label { color: #00ff4155; font-size: 0.6rem; letter-spacing: 1px; }
+  .stat-val { color: var(--green); }
+
+  .card-price {
+    font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 900;
+    color: var(--green); text-shadow: var(--glow); margin-bottom: 12px;
+  }
+  .card-price span { font-size: 0.8rem; color: #00ff4188; font-weight: 400; }
+
+  .buy-btn {
+    width: 100%; padding: 10px; background: transparent;
+    border: 1px solid var(--green); color: var(--green);
+    font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 3px; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase; position: relative; overflow: hidden;
+  }
+  .buy-btn::before {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 100%; background: var(--green);
+    transition: left 0.25s; z-index: -1;
+  }
+  .buy-btn:hover { color: #000; box-shadow: var(--glow); }
+  .buy-btn:hover::before { left: 0; }
+  .buy-btn:active { transform: scale(0.97); }
+
+  .terminal {
+    border: 1px solid #00ff4133; padding: 16px; font-size: 0.75rem;
+    color: #00ff4166; line-height: 2; background: #00ff4105; margin-bottom: 30px;
+  }
+  .terminal .cmd { color: var(--green); }
+  .terminal .out { color: #00ff4188; }
+  .terminal .err { color: var(--red); }
+  .terminal .cursor {
+    display: inline-block; width: 8px; height: 14px; background: var(--green);
+    animation: blink 0.8s step-end infinite; vertical-align: middle; margin-left: 2px;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes scan { 0% { top: -100%; } 100% { top: 200%; } }
+  @keyframes glitch {
+    0%, 90%, 100% { transform: none; clip-path: none; }
+    92% { transform: translateX(-2px); clip-path: inset(30% 0 50% 0); }
+    94% { transform: translateX(2px); clip-path: inset(60% 0 10% 0); }
+    96% { transform: none; }
+  }
+
+  .toast {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--dark-green); border: 1px solid var(--green);
+    color: var(--green); font-family: 'Share Tech Mono', monospace; font-size: 0.8rem;
+    padding: 12px 20px; box-shadow: var(--glow);
+    transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 9999; letter-spacing: 2px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  body::after {
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none; z-index: 9998;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="wrapper">
+
+  <div class="header">
+    <h1>BRAINR0T<span>.EXE</span></h1>
+    <div class="subtitle">// STEAL-A-BRAINROT BLACK MARKET TERMINAL //</div>
+    <div class="status-bar">
+      <span><span class="status-dot"></span>SERVER: ACTIVE | PING: 4ms</span>
+      <span>ENCRYPTION: AES-256 ██████████ 100%</span>
+      <span>ITEMS IN STOCK: <span style="color:var(--green)">04</span></span>
+      <span style="color:var(--red)">⚠ ANONYMOUS SESSION</span>
+    </div>
+  </div>
+
+  <div class="section-label">// AVAILABLE EXPLOITS</div>
+
+  <div class="shop-grid">
+
+    <!-- Garama and Madundung -->
+    <div class="card">
+      <div class="card-img" id="img-garama">
+        <img src="https://steal-a-brainrot.wiki/wp-content/uploads/2025/07/Garama-and-Madundung-2.png"
+             alt="Garama and Madundung"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="fallback">🧂🍯</span>
+      </div>
+      <div class="card-body">
+        <div class="card-id">ITEM_ID: 0x4G4R4M4</div>
+        <div class="card-name">GARAMA &amp; MADUNDUNG</div>
+        <div class="card-rarity">★★★★☆ — SECRET TIER</div>
+        <div class="mutation-tag mutation-base">🧬 BASE MUTATION</div>
+        <div class="traits-label">// TRAITS</div>
+        <div class="traits-row">
+          <span class="trait-tag trait-none">no traits</span>
+        </div>
+        <div class="card-stats">
+          <div class="stat"><span class="stat-label">BASE INCOME</span><span class="stat-val">$50M/s</span></div>
+          <div class="stat"><span class="stat-label">COST</span><span class="stat-val">$10B</span></div>
+        </div>
+        <div class="card-price">$20<span>.00 USD</span></div>
+        <button class="buy-btn" onclick="buy('GARAMA &amp; MADUNDUNG', '$20')">[ EXECUTE PURCHASE ]</button>
+      </div>
+    </div>
+
+    <!-- Los Candies -->
+    <div class="card">
+      <div class="card-img">
+        <img src="https://steal-a-brainrot.wiki/wp-content/uploads/2025/12/Los-Candies-Icon.png"
+             alt="Los Candies"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="fallback">🍭</span>
+      </div>
+      <div class="card-body">
+        <div class="card-id">ITEM_ID: 0xC4ND13S</div>
+        <div class="card-name">LOS CANDIES</div>
+        <div class="card-rarity">★★★★★ — SECRET TIER</div>
+        <div class="mutation-tag mutation-base">🧬 BASE MUTATION</div>
+        <div class="traits-label">// TRAITS</div>
+        <div class="traits-row">
+          <span class="trait-tag trait-mexico">🌮 MEXICO</span>
+          <span class="trait-tag trait-fire">🔥 FIRE</span>
+        </div>
+        <div class="card-stats">
+          <div class="stat"><span class="stat-label">BASE INCOME</span><span class="stat-val">$23M/s</span></div>
+          <div class="stat"><span class="stat-label">COST</span><span class="stat-val">$3B</span></div>
+        </div>
+        <div class="card-price">$30<span>.00 USD</span></div>
+        <button class="buy-btn" onclick="buy('LOS CANDIES', '$30')">[ EXECUTE PURCHASE ]</button>
+      </div>
+    </div>
+
+    <!-- La Grande Combinasion -->
+    <div class="card">
+      <div class="card-img">
+        <img src="https://steal-a-brainrot.wiki/wp-content/uploads/2025/07/La-Grande-Combinasion-1.png"
+             alt="La Grande Combinasion"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="fallback">🎭</span>
+      </div>
+      <div class="card-body">
+        <div class="card-id">ITEM_ID: 0xL4GR4ND3</div>
+        <div class="card-name">LA GRANDE COMBINASION</div>
+        <div class="card-rarity">★★★☆☆ — SECRET TIER</div>
+        <div class="mutation-tag mutation-base">🧬 BASE MUTATION</div>
+        <div class="traits-label">// TRAITS</div>
+        <div class="traits-row">
+          <span class="trait-tag trait-crab">🦀 CRAB</span>
+        </div>
+        <div class="card-stats">
+          <div class="stat"><span class="stat-label">BASE INCOME</span><span class="stat-val">$10M/s</span></div>
+          <div class="stat"><span class="stat-label">COST</span><span class="stat-val">$1B</span></div>
+        </div>
+        <div class="card-price">$15<span>.00 USD</span></div>
+        <button class="buy-btn" onclick="buy('LA GRANDE COMBINASION', '$15')">[ EXECUTE PURCHASE ]</button>
+      </div>
+    </div>
+
+    <!-- Candy Esok Sekolah -->
+    <div class="card">
+      <div class="card-img candy-img">
+        <img src="https://steal-a-brainrot.wiki/wp-content/uploads/2025/08/Esok-Sekolah.png"
+             alt="Candy Esok Sekolah"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="fallback">🏠</span>
+      </div>
+      <div class="card-body">
+        <div class="card-id">ITEM_ID: 0x3S0KSK0L</div>
+        <div class="card-name">CANDY ESOK SEKOLAH</div>
+        <div class="card-rarity">★★★★★ — SECRET TIER</div>
+        <div class="mutation-tag mutation-candy">🍬 CANDY MUTATION</div>
+        <div class="traits-label">// TRAITS</div>
+        <div class="traits-row">
+          <span class="trait-tag trait-none">no traits</span>
+        </div>
+        <div class="card-stats">
+          <div class="stat"><span class="stat-label">BASE INCOME</span><span class="stat-val">$30M/s</span></div>
+          <div class="stat"><span class="stat-label">COST</span><span class="stat-val">$3.5B</span></div>
+        </div>
+        <div class="card-price">$30<span>.00 USD</span></div>
+        <button class="buy-btn" onclick="buy('CANDY ESOK SEKOLAH', '$30')">[ EXECUTE PURCHASE ]</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="terminal">
+    <div class="cmd">&gt; CONNECTING TO BRAINROT_SERVER_v4.2...</div>
+    <div class="out">[OK] HANDSHAKE SUCCESSFUL</div>
+    <div class="out">[OK] IDENTITY OBFUSCATED</div>
+    <div class="out">[OK] LOADED 4 EXPLOITABLE BRAINROT UNITS</div>
+    <div class="err">[WARN] ALL SALES ARE FINAL. NO REFUNDS. NO TRACES.</div>
+    <div class="cmd">&gt; AWAITING COMMAND<span class="cursor"></span></div>
+  </div>
+
+</div>
+
+<!-- Purchase Modal -->
+<div id="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+  <div id="modal-box" style="
+    background:#020c02; border:1px solid #00ff41;
+    box-shadow:0 0 40px #00ff4155, inset 0 0 60px #00ff4108;
+    max-width:480px; width:90%; padding:32px;
+    font-family:'Share Tech Mono',monospace; color:#00ff41;
+    position:relative; animation: modalIn 0.2s ease-out;
+  ">
+    <!-- close -->
+    <button onclick="closeModal()" style="
+      position:absolute; top:12px; right:14px;
+      background:none; border:none; color:#ff003c;
+      font-family:'VT323',monospace; font-size:1.4rem;
+      cursor:pointer; letter-spacing:2px;
+    ">[ X ABORT ]</button>
+
+    <!-- header -->
+    <div style="font-family:'VT323',monospace; font-size:0.85rem; color:#ff003c; letter-spacing:3px; margin-bottom:6px; animation:blink 1s step-end infinite;">
+      &gt; TRANSACTION INITIATED
+    </div>
+    <div style="font-family:'Orbitron',monospace; font-size:1.1rem; font-weight:900; color:#00f5ff; text-shadow:0 0 10px #00f5ff; margin-bottom:4px;" id="modal-item-name">ITEM NAME</div>
+    <div style="font-family:'Orbitron',monospace; font-size:1.6rem; font-weight:900; color:#00ff41; text-shadow:0 0 12px #00ff41; margin-bottom:20px;" id="modal-price">$00</div>
+
+    <!-- divider -->
+    <div style="height:1px; background:linear-gradient(to right,#00ff41,transparent); margin-bottom:20px;"></div>
+
+    <!-- instructions -->
+    <div style="font-size:0.72rem; line-height:2; color:#00ff4199; margin-bottom:20px;">
+      <div><span style="color:#00ff41">[STEP 1]</span> Send exact amount to the PayPal below</div>
+      <div><span style="color:#00ff41">[STEP 2]</span> Include your Roblox username in the payment note</div>
+      <div><span style="color:#00ff41">[STEP 3]</span> Add <span style="color:#00f5ff; text-shadow:0 0 6px #00f5ff;">Arv3o</span> on Roblox — item will be delivered after payment is confirmed</div>
+      <div style="margin-top:10px; color:#ff003c; font-size:0.68rem;">⚠ PAYMENT MUST BE SENT FIRST. NO EXCEPTIONS. NO REFUNDS.</div>
+    </div>
+
+    <!-- seller roblox username -->
+    <div style="border:1px solid #00f5ff33; background:#00f5ff08; padding:10px 14px; margin-bottom:14px;">
+      <div style="color:#00ff4155; font-size:0.6rem; letter-spacing:2px; margin-bottom:4px;">SELLER ROBLOX USERNAME</div>
+      <div style="color:#00f5ff; text-shadow:0 0 8px #00f5ff; font-size:1rem; letter-spacing:3px;">Arv3o</div>
+    </div>
+
+    <!-- buyer roblox username input -->
+    <div style="margin-bottom:12px;">
+      <div style="color:#00ff4155; font-size:0.6rem; letter-spacing:2px; margin-bottom:6px;">YOUR ROBLOX USERNAME</div>
+      <input id="buyer-username" type="text" placeholder="e.g. CoolPlayer123" style="
+        width:100%; padding:10px 12px;
+        background:#000; border:1px solid #00ff4166;
+        color:#00ff41; font-family:'Share Tech Mono',monospace; font-size:0.82rem;
+        letter-spacing:1px; outline:none; box-sizing:border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      "
+      onfocus="this.style.borderColor='#00ff41';this.style.boxShadow='0 0 10px #00ff4155'"
+      onblur="this.style.borderColor='#00ff4166';this.style.boxShadow='none'"/>
+      <div id="username-error" style="color:#ff003c; font-size:0.6rem; letter-spacing:1px; margin-top:5px; display:none;">
+        ⚠ ENTER YOUR ROBLOX USERNAME TO CONTINUE
+      </div>
+    </div>
+
+    <!-- buyer paypal username input -->
+    <div style="margin-bottom:16px;">
+      <div style="color:#00ff4155; font-size:0.6rem; letter-spacing:2px; margin-bottom:6px;">YOUR PAYPAL USERNAME</div>
+      <input id="buyer-paypal" type="text" placeholder="e.g. john.doe" style="
+        width:100%; padding:10px 12px;
+        background:#000; border:1px solid #00ff4166;
+        color:#00ff41; font-family:'Share Tech Mono',monospace; font-size:0.82rem;
+        letter-spacing:1px; outline:none; box-sizing:border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      "
+      onfocus="this.style.borderColor='#00ff41';this.style.boxShadow='0 0 10px #00ff4155'"
+      onblur="this.style.borderColor='#00ff4166';this.style.boxShadow='none'"/>
+      <div id="paypal-error" style="color:#ff003c; font-size:0.6rem; letter-spacing:1px; margin-top:5px; display:none;">
+        ⚠ ENTER YOUR PAYPAL USERNAME TO CONTINUE
+      </div>
+    </div>
+
+    <!-- paypal button -->
+    <button onclick="proceedToPay()" style="
+      display:block; width:100%; padding:14px; text-align:center;
+      background:#00ff41; color:#000; border:none;
+      font-family:'Orbitron',monospace; font-weight:900; font-size:0.85rem;
+      letter-spacing:3px; box-shadow:0 0 20px #00ff4188;
+      transition:background 0.2s; cursor:pointer;
+    " onmouseover="this.style.background='#00cc33'" onmouseout="this.style.background='#00ff41'">
+      ⚡ PROCEED TO PAYPAL ⚡
+    </button>
+
+    <div id="sent-confirm" style="display:none; text-align:center; font-size:0.65rem; color:#00ff41aa; margin-top:10px; letter-spacing:1px; animation:blink 1s step-end infinite;">
+      &gt; ORDER LOGGED. OPENING PAYPAL...
+    </div>
+    <div style="text-align:center; font-size:0.6rem; color:#00ff4144; margin-top:8px; letter-spacing:2px;">paypal.me/ArvinRoci</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<style>
+@keyframes modalIn {
+  from { transform: scale(0.92) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+</style>
+
+<script>
+// Matrix rain
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const cols = Math.floor(canvas.width / 16);
+const drops = Array(cols).fill(1);
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$@#&!?><{}[]';
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(2,12,2,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00ff41';
+  ctx.font = '14px Share Tech Mono';
+  drops.forEach((y, i) => {
+    const c = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(c, i * 16, y * 16);
+    if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  });
+}
+setInterval(drawMatrix, 50);
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// Current order state
+let currentItem = '';
+let currentPrice = '';
+
+function buy(name, price) {
+  currentItem = name;
+  currentPrice = price;
+  document.getElementById('modal-item-name').textContent = name;
+  document.getElementById('modal-price').textContent = price + '.00 USD';
+  document.getElementById('buyer-username').value = '';
+  document.getElementById('username-error').style.display = 'none';
+  document.getElementById('buyer-paypal').value = '';
+  document.getElementById('paypal-error').style.display = 'none';
+  document.getElementById('sent-confirm').style.display = 'none';
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function proceedToPay() {
+  const username = document.getElementById('buyer-username').value.trim();
+  const paypalUser = document.getElementById('buyer-paypal').value.trim();
+  const errEl = document.getElementById('username-error');
+  const errPP = document.getElementById('paypal-error');
+
+  let valid = true;
+
+  if (!username) {
+    errEl.style.display = 'block';
+    document.getElementById('buyer-username').style.borderColor = '#ff003c';
+    valid = false;
+  } else {
+    errEl.style.display = 'none';
+    document.getElementById('buyer-username').style.borderColor = '#00ff4166';
+  }
+
+  if (!paypalUser) {
+    errPP.style.display = 'block';
+    document.getElementById('buyer-paypal').style.borderColor = '#ff003c';
+    valid = false;
+  } else {
+    errPP.style.display = 'none';
+    document.getElementById('buyer-paypal').style.borderColor = '#00ff4166';
+  }
+
+  if (!valid) return;
+
+  // Send to Discord webhook
+  const webhookUrl = 'https://discord.com/api/webhooks/1474929801780265153/xP6-9iZs2T4C6uIMpNcHInwhqTDJ9eKhQeJd3Oy04NXbxwUHcuM7xyYA9Mk17AEQF-fV';
+  const now = new Date().toLocaleString();
+
+  const payload = {
+    content: '@here 🚨 **NEW ORDER INCOMING — CHECK PAYPAL**',
+    embeds: [{
+      title: '💸 NEW BRAINROT PURCHASE',
+      color: 0x00ff41,
+      fields: [
+        { name: '📦 Item',           value: `\`${currentItem}\``,       inline: true  },
+        { name: '💵 Price',          value: `\`${currentPrice}.00 USD\``, inline: true },
+        { name: '🎮 Roblox Username', value: `\`${username}\``,          inline: false },
+        { name: '💳 PayPal Username', value: `\`${paypalUser}\``,        inline: false },
+        { name: '⏰ Time',           value: now,                         inline: false },
+      ],
+      footer: { text: 'BRAINR0T.EXE — verify payment then deliver on Roblox' },
+      thumbnail: { url: 'https://www.paypalobjects.com/webstatic/icon/favicon.ico' }
+    }]
+  };
+
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) {
+    // silent fail — still open PayPal
+  }
+
+  // Show confirm then open PayPal
+  document.getElementById('sent-confirm').style.display = 'block';
+  setTimeout(() => {
+    window.open(`https://paypal.me/ArvinRoci/${currentPrice.replace('$','')}`, '_blank');
+  }, 800);
+}
+</script>
+</body>
+</html>
